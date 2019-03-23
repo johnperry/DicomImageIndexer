@@ -1,0 +1,92 @@
+<project name="DicomImageIndexer" default="all" basedir=".">
+
+	<property name="build" value="${basedir}/build"/>
+	<property name="source" value="${basedir}/source"/>
+	<property name="java" value="${source}/java"/>
+	<property name="products" value="${basedir}/products"/>
+	<property name="ctp" value="/Development/CTP"/>
+
+	<path id="classpath">
+		<pathelement location="${products}/CTP.jar"/>
+		<pathelement location="${products}/util.jar"/>
+		<pathelement location="${products}/log4j.jar"/>
+		<pathelement location="${products}/jdbm.jar"/>
+	</path>
+
+	<target name="clean">
+		<delete dir="${build}" failonerror="false"/>
+	</target>
+
+	<target name="init">
+		<mkdir dir="${build}"/>
+		<tstamp>
+			<format property="today" pattern="dd-MMMM-yyyy"/>
+			<format property="now" pattern="HH:mm:ss"/>
+		</tstamp>
+		<echo message="Time now ${now}"/>
+		<echo message="ant.java.version = ${ant.java.version}" />
+		<mkdir dir="${build}"/>
+		<mkdir dir="${products}"/>
+	</target>
+
+	<target name="getLibraryJars">
+		<copy overwrite="true" todir="${products}">
+			<fileset dir="${ctp}/libraries">
+				<include name="CTP.jar"/>
+				<include name="dcm4che.jar"/>
+				<include name="dcm4che-imageio-rle-2.0.25.jar"/>
+				<include name="log4j.jar"/>
+				<include name="util.jar"/>
+				<include name="jdbm.jar"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="jar" depends="init, getLibraryJars">
+		<javac destdir="${build}" optimize="on"
+				classpathref="classpath"
+				includeantruntime="false"
+				debug="true" debuglevel="lines,vars,source">
+			<src path="${java}"/>
+		</javac>
+		<jar jarfile="${products}/DicomImageIndexer.jar">
+			<manifest>
+				<attribute name="Main-Class" value="org.rsna.indexer.DicomImageIndexer"/>
+				<attribute name="Implementation-Version" value="${today} @ ${now}"/>
+				<attribute name="Class-Path" value="CTP.jar util.jar log4j.jar dcm4che.jar dcm4che-imageio-rle-2.0.25.jar jdbm.jar"/>
+			</manifest>
+			<fileset dir="${build}" includes="/org/rsna/indexer/**"/>
+		</jar>
+	</target>
+
+	<target name="installer" depends="jar">
+	
+		<copy overwrite="true" todir="${build}/DicomImageIndexer">
+			<fileset dir="${ctp}/libraries">
+				<include name="CTP.jar"/>
+				<include name="dcm4che.jar"/>
+				<include name="dcm4che-imageio-rle-2.0.25.jar"/>
+				<include name="log4j.jar"/>
+				<include name="util.jar"/>
+				<include name="jdbm.jar"/>
+			</fileset>
+			<fileset dir="${products}"
+				includes="DicomImageIndexer.jar"/>
+		</copy>
+
+		<jar destfile="${products}/DicomImageIndexer-installer.jar">
+			<manifest>
+				<attribute name="Main-Class" value="org.rsna.installer.Installer"/>
+				<attribute name="Implementation-Version" value="${today} @ ${now}"/>
+				<attribute name="Date" value="${today} at ${now}"/>
+				<attribute name="Description" value="DICOM Image Indexer"/>
+			</manifest>
+			<fileset dir="${build}"
+				includes="/org/rsna/installer/** DicomImageIndexer/**"/>
+
+		</jar>
+	</target>
+
+	<target name="all" depends="clean, jar"/>
+
+</project>
