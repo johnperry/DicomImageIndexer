@@ -81,6 +81,7 @@ public class IndexEntry implements ActionListener, Serializable {
 	}
 	
 	class Runner extends Thread {
+		final String defaultProgram = "BinaryDump.jar";
 		String name;
 		String program;
 		File programFile = null;;
@@ -89,7 +90,8 @@ public class IndexEntry implements ActionListener, Serializable {
 			super("BinaryDump Runner");
 			this.name = name;
 			Configuration config = Configuration.getInstance();
-			program = config.getProperty("binary", "BinaryDump.jar");
+			program = config.getProperty("binary", defaultProgram);
+			if (program.equals("")) program = defaultProgram;
 			programFile = (new File(program)).getAbsoluteFile();
 			if (programFile.exists()) programDir = programFile.getParentFile();
 		}
