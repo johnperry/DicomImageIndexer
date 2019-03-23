@@ -5,6 +5,7 @@
 	<property name="java" value="${source}/java"/>
 	<property name="products" value="${basedir}/products"/>
 	<property name="ctp" value="/Development/CTP"/>
+	<property name="binarydump" value="/Development/Tools/BinaryDump"/>
 
 	<path id="classpath">
 		<pathelement location="${products}/CTP.jar"/>
@@ -70,6 +71,8 @@
 				<include name="util.jar"/>
 				<include name="jdbm.jar"/>
 			</fileset>
+			<fileset dir="${binarydump}/products"
+				includes="BinaryDump.jar"/>
 			<fileset dir="${products}"
 				includes="DicomImageIndexer.jar"/>
 		</copy>

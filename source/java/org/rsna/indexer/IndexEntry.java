@@ -89,7 +89,7 @@ public class IndexEntry implements ActionListener, Serializable {
 			super("BinaryDump Runner");
 			this.name = name;
 			Configuration config = Configuration.getInstance();
-			program = config.getProperty("binary", "D:/Development/Tools/BinaryDump/products/BinaryDump.jar");
+			program = config.getProperty("binary", "BinaryDump.jar");
 			programFile = (new File(program)).getAbsoluteFile();
 			if (programFile.exists()) programDir = programFile.getParentFile();
 		}
