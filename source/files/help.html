@@ -1,0 +1,98 @@
+<html>
+	<head>
+		<title>DicomImageIndexer Help</title>
+	</head>
+	<body>
+		<center><h1>DicomImageIndexer Help</h1></center>
+		DicomImageIndexer is a stand-alone program for indexing a collection
+		of DICOM image files, creating a searchable index allowing the images 
+		to be found by:
+		<ul>
+		<li>File name
+		<li>Transfer Syntax UID
+		<li>Photometric Interpretation
+		<li>Planar Configuration
+		<li>Pixel Representation
+		<li>Pixel Presentation
+		<li>Modality
+		</ul>
+
+		<p>On a Windows machine, you can run the program by double-clicking it or by
+		launching a command window, navigating to the DicomImageIndexer directory,
+		and typing: 
+		<br><br>&nbsp;&nbsp;&nbsp;&nbsp;<tt>java -jar DicomImageIndexer.jar</tt>
+		
+		<p>If an out-of-memory error occurs, you may assign more memory to
+		the program by running it in a command window with the command:
+		<br><br>&nbsp;&nbsp;&nbsp;&nbsp;<tt>java -Xmx768m -jar DicomImageIndexer.jar</tt>
+		
+		<p><b>The Index Tab</b>
+		
+		<p>When the program starts, it looks to see if it has a database. If it does not,
+		it creates the database and populates it by walking the directory tree under the
+		directory specified on the Properties tab. It parses all the files it finds in that
+		tree and creates database entries for all the files that parse as DICOM objects.
+		
+		<p>The files in the tree can be re-indexed (for example, after  changing the directory
+		specified on the Properties tab) by clicking the <b>Rebuild Index</b> button in the footer.
+		
+		<p>When the index is ready, the Index tab displays a summary of all the unique types
+		of images it found.
+
+		<p>Example images from all the image types can be exported to the DICOM Storage SCP
+		whose URL is specified on the Properties tab by clicking the <b>Export All Types</b> button
+		in the footer. The number of example images to export can be specified in the text field 
+		to the left of the button.
+		
+		<p>All the images of a specific type can be exported by clicking the <b>Export</b> button
+		next to the listing of the type.
+		
+		<p>All  the images of a specific type can be listed in the Results tab by clicking the <b>List</b> button
+		next to the listing of the type.
+		
+		<p><b>The Search Tab</b>
+		
+		<p>The Search tab contains a list of all the query fields. The format of the query field
+		imposes these rules:
+		
+		<ul>
+		<li> Searches are case-sensitive.
+		<li> A blank field matches a missing element or an element with an empty value.
+		<li> <tt><b>*</b></tt> matches an element, whether it exists or not.
+		<li> <tt><b>*text</b></tt> matches an element value that ends with <tt><b>text</b></tt>.
+		<li> <tt><b>text*</b></tt> matches an element value that starts with <tt><b>text</b></tt>.
+		<li> <tt><b>*text*</b></tt> matches an element value that contains <tt><b>text</b></tt>.
+		<li> <tt><b>text</b></tt> matches an element value that exactly equals <tt><b>text</b></tt>.
+		</ul>
+
+		<p>When the <b>Search</b> button is clicked, the database is searched for images that
+		match all the query fields, and the Results tab is automatically selected.
+		
+		<p><b>The Results Tab</b>
+		
+		<p>The Results tab lists the results of a query. Each matching file is listed,
+		along with two buttons:
+		
+		<ul> 
+		<li> The <b>Export</b> button exports the file to the DICOM Storage SCP 
+		specified on the Properties tab. 
+		<li> The <b>Binary</b> button launches the BinaryDump program and displays
+		the contents of the file in binary form. For DICOM files, the BinaryDump
+		program contains a DICOM parser that displays the binary in colors making
+		it easy to follow the structure. It also contains a menu of functions that 
+		show the contents of the file in parsed form. The <b>List Elements</b> menu item
+		can be especially useful because it displays an attached frame that lists
+		all the elements that the parser can parse. Clicking on any element automatically
+		jumps the binary display to the selected element.
+		</ul>
+		
+		<p><b>The Properties Tab</b>
+		
+		<p>The Properties tab allows for configuring the image root directory and the 
+		DICOM Storage SCP URL.
+		
+		<p>The location of the BinaryDump program can also be configured, but it can
+		be left blank.
+
+	</body>
+</html>

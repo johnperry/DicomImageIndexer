@@ -33,7 +33,8 @@ public class IndexPane extends JPanel implements ActionListener {
 	boolean running = false;
 	JButton startStop;
 	JButton exportTypes;
-	ColorPane cp;
+	JTextField imagesPerType;
+	//ColorPane cp;
 
 	public static IndexPane getInstance() {
 		if (instance == null) {
@@ -49,21 +50,36 @@ public class IndexPane extends JPanel implements ActionListener {
 		center = new JPanel();
 		center.setLayout( new BorderLayout() );
 		center.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-		cp = new ColorPane();
-		center.add(cp);
+		center.setLayout(new RowLayout());
+		center.setBackground(Color.white);
+		//cp = new ColorPane();
+		//center.add(cp);
 		JScrollPane jsp = new JScrollPane();
 		jsp.setViewportView(center);
 		jsp.getVerticalScrollBar().setUnitIncrement(30);
 		add(jsp, BorderLayout.CENTER);
 
-		JPanel footer = new JPanel();
-		startStop = new JButton("Start");
+		Box footer = Box.createHorizontalBox();
+		footer.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+		Box left = Box.createHorizontalBox();
+		left.setBorder(BorderFactory.createRaisedBevelBorder());
+		startStop = new JButton("Rebuild Index");
 		startStop.addActionListener(this);
-		exportTypes = new JButton("Export Types");
+		left.add(startStop);
+		Box right = Box.createHorizontalBox();
+		right.setBorder(BorderFactory.createRaisedBevelBorder());
+		right.add(Box.createHorizontalStrut(4));
+		right.add(new JLabel("Images/type to export: "));
+		imagesPerType = new JTextField("1", 4);
+		imagesPerType.setMaximumSize(new Dimension(40,50));
+		right.add(imagesPerType);
+		right.add(Box.createHorizontalStrut(8));
+		exportTypes = new JButton("Export All Types");
 		exportTypes.addActionListener(this);
-		footer.add(startStop);
-		footer.add(Box.createHorizontalStrut(20));
-		footer.add(exportTypes);
+		right.add(exportTypes);
+		footer.add(left);
+		footer.add(Box.createHorizontalGlue());
+		footer.add(right);
 		add(footer, BorderLayout.SOUTH);
 		
 		open();
@@ -106,10 +122,12 @@ public class IndexPane extends JPanel implements ActionListener {
 		
 	public LinkedList<IndexEntry> search(IndexEntryType iet) {
 		return search(
-				"",
+				"*",
 				iet.transferSyntax, 
 				iet.photometricInterpretation, 
 				iet.planarConfiguration, 
+				iet.pixelRepresentation, 
+				iet.pixelPresentation, 
 				iet.modality);
 	}
 		
@@ -118,11 +136,20 @@ public class IndexPane extends JPanel implements ActionListener {
 				String transferSyntax,
 				String photometricInterpretation,
 				String planarConfiguration,
+				String pixelRepresentation, 
+				String pixelPresentation, 
 				String modality) {
 		StatusPane.getInstance().setText("Searching...");
 		LinkedList<IndexEntry> results = new LinkedList<IndexEntry>();
 		for (IndexEntry entry : index) {
-			if (entry.matches(fileName, transferSyntax, photometricInterpretation, planarConfiguration, modality)) {
+			if (entry.matches(
+						fileName, 
+						transferSyntax, 
+						photometricInterpretation, 
+						planarConfiguration, 
+						pixelRepresentation, 
+						pixelPresentation, 
+						modality)) {
 				results.add(entry);
 			}
 		}
@@ -132,43 +159,67 @@ public class IndexPane extends JPanel implements ActionListener {
 
     public void actionPerformed(ActionEvent event) {
 		if (event.getSource().equals(startStop)) {
-			if (startStop.getText().equals("Start")) {
+			if (startStop.getText().equals("Rebuild Index")) {
 				buildIndex();
 			}
 			else running = false;
 		}
 		else if (event.getSource().equals(exportTypes)) {
-			Runnable r = new Runnable() {
-				public void run() {
-					int count = 0;
-					int ok = 0;
-					int retry = 0;
-					int fail = 0;
-					StatusPane sp = StatusPane.getInstance();
-					Configuration config = Configuration.getInstance();
-					String scp = config.getProperty("scp", "dicom://DEST:SRC@192.168.0.225:104");
-					DicomStorageSCU scu = new DicomStorageSCU(scp, 0, true, 0, 0, 0, 0);
-					for (IndexEntryType iet : getTypes()) {
-						LinkedList<IndexEntry> list = search(iet);
-						int n = list.size()/2;
-						File file = list.get(n).file;
-						Status result = scu.send(file);
-						sp.setText(file.getAbsolutePath() + " > " + result.toString());
-						count++;
-						if (result.equals(Status.OK)) ok++;
-						else if (result.equals(Status.FAIL)) {
-							fail++;
-							cp.println(result.toString() + ": " + file);
-						}
-						else if (result.equals(Status.RETRY)) {
-							retry++;
-							cp.println(result.toString() + ": " + file);
-						}
+			(new Sender()).start();
+		}
+	}
+	
+	class Sender extends Thread {
+		int count = 0;
+		int ok = 0;
+		int retry = 0;
+		int fail = 0;
+		DicomStorageSCU scu;
+		StatusPane sp;
+		public Sender() {
+			super();
+		}
+		public void run() {
+			StatusPane sp = StatusPane.getInstance();
+			Configuration config = Configuration.getInstance();
+			String scp = config.getProperty("scp", "dicom://DEST:SRC@192.168.0.225:104");
+			scu = new DicomStorageSCU(scp, 0, true, 0, 0, 0, 0);
+			int nImagesToSend = StringUtil.getInt(imagesPerType.getText(), -1);
+			if (nImagesToSend < 0) imagesPerType.setText("1");
+			nImagesToSend = Math.max(nImagesToSend, 1);
+
+			for (IndexEntryType iet : getTypes()) {
+				LinkedList<IndexEntry> list = search(iet);
+				int n = list.size();
+				int first = 0;
+				int inc = 1;
+				if (n <= nImagesToSend) {
+					for (int k=0; k<n; k++) {
+						send(list.get(k).file);
 					}
-					sp.setText(ok + " of " + count + " files sent successfully (fail = "+fail+"; retry = "+retry+")");
 				}
-			};
-			(new Thread(r)).start();
+				else {
+					for (int i=1; i<=nImagesToSend; i++) {
+						int k = (n * i) / (nImagesToSend + 1) -1;
+						send(list.get(k).file);
+					}
+				}
+			}
+			sp.setText(ok + " of " + count + " files sent successfully (fail = "+fail+"; retry = "+retry+")");
+		}
+		private void send(File file) {
+			Status result = scu.send(file);
+			sp.setText(file.getAbsolutePath() + " > " + result.toString());
+			count++;
+			if (result.equals(Status.OK)) ok++;
+			else if (result.equals(Status.FAIL)) {
+				fail++;
+				//cp.println(result.toString() + ": " + file);
+			}
+			else if (result.equals(Status.RETRY)) {
+				retry++;
+				//cp.println(result.toString() + ": " + file);
+			}
 		}
 	}
 	
@@ -191,8 +242,9 @@ public class IndexPane extends JPanel implements ActionListener {
 				}
 			}
 			catch (Exception unable) { unable.printStackTrace(); }
-			cp.print(listTypes());
-			cp.println(count + " images loaded");
+			//cp.print(listTypes());
+			//cp.println(count + " images loaded");
+			listTypes();
 			StatusPane.getInstance().setText(count + " images loaded");
 		}
 	}			
@@ -201,7 +253,8 @@ public class IndexPane extends JPanel implements ActionListener {
 		close();
 		delete();
 		open();
-		cp.clear();
+		//cp.clear();
+		center.removeAll();
 		Walker walker = new Walker();
 		walker.start();
 	}
@@ -223,12 +276,11 @@ public class IndexPane extends JPanel implements ActionListener {
 			running = true;
 			startStop.setText("Stop");
 			walk(dir);
-			sb.append(listTypes());
-			sb.append(count + " files.\n");
-			sb.append("Done.\n");
-			cp.setText(sb.toString());
+			listTypes();
+			//System.out.println(count + " files.\n");
+			//System.out.println("IndexEntryTypes table size = "+types.size()+"\n");
 			running = false;
-			startStop.setText("Start");
+			startStop.setText("Rebuild Index");
 		}
 		
 		private void walk(File file) {
@@ -270,15 +322,20 @@ public class IndexPane extends JPanel implements ActionListener {
 		types.put(iet, i);
 	}
 	
-	private String listTypes() {
-		StringBuffer sb = new StringBuffer();
-		IndexEntryType[] ta = types.keySet().toArray(new IndexEntryType[types.size()]);
-		Arrays.sort(ta);
-		for (IndexEntryType iet : ta) {
-			int n = types.get(iet).intValue();
-			sb.append(n + ":\n"+iet.toString());
-		}
-		sb.append("\nIndexEntryTypes table size = "+types.size()+"\n");
-		return sb.toString();
+	private void listTypes() {
+		final IndexEntryType[] ta = types.keySet().toArray(new IndexEntryType[types.size()]);
+		Runnable r = new Runnable() {
+			public void run() {
+				Arrays.sort(ta);
+				center.removeAll();
+				for (IndexEntryType iet : ta) {
+					int n = types.get(iet).intValue();
+					center.add(iet.toPanel(n));
+					center.add(RowLayout.crlf());
+
+				}
+			}
+		};
+		SwingUtilities.invokeLater(r);
 	}
 }

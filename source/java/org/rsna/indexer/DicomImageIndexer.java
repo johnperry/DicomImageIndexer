@@ -22,6 +22,7 @@ public class DicomImageIndexer extends JFrame {
     SearchPane searchPane;
     ResultsPane resultsPane;
     PropertiesPane propertiesPane;
+    HelpPane helpPane;
     ColorPane text;
     StatusPane status;
 
@@ -44,6 +45,7 @@ public class DicomImageIndexer extends JFrame {
 		searchPane = SearchPane.getInstance();
 		resultsPane = ResultsPane.getInstance();
 		propertiesPane = PropertiesPane.getInstance();
+		helpPane = new HelpPane( FileUtil.getText( new File("help.html") ) );
 
 		//Make a footer bar to display status.
 		status = StatusPane.getInstance(" ", bgColor);
@@ -64,6 +66,9 @@ public class DicomImageIndexer extends JFrame {
 		
 		//Put in the props pane
 		jtp.add("Properties", propertiesPane);
+		
+		//Put in the help pane
+		jtp.add("Help", helpPane);
 		
 		//Select the search pane
 		jtp.setSelectedComponent(searchPane);

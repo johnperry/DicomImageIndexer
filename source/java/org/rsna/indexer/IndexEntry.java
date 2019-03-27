@@ -43,22 +43,43 @@ public class IndexEntry implements ActionListener, Serializable {
 	}
 
 	public boolean matches(
-						String fileName,
-						String transferSyntax, 
-						String photometricInterpretation, 
-						String planarConfiguration, 
-						String modality) {
-							
-		if (!fileName.equals("")) {
-			String name = this.file.getAbsolutePath();
-			if (!name.startsWith(fileName) && !name.endsWith(fileName)) return false;
-		}
+						String fileNameSpec,
+						String transferSyntaxSpec, 
+						String photometricInterpretationSpec, 
+						String planarConfigurationSpec, 
+						String pixelRepresentationSpec, 
+						String pixelPresentationSpec, 
+						String modalitySpec) {
 		
-		if (!transferSyntax.equals("") && !this.transferSyntax.endsWith(transferSyntax)) return false;
-		if (!photometricInterpretation.equals("") && !this.photometricInterpretation.startsWith(photometricInterpretation)) return false;
-		if (!planarConfiguration.equals("") && !this.planarConfiguration.equals(planarConfiguration)) return false;
-		if (!modality.equals("") && !this.modality.equals(modality)) return false;
+		if (!matches(fileNameSpec, this.file.getAbsolutePath())) return false;
+		if (!matches(transferSyntaxSpec, this.transferSyntax)) return false;
+		if (!matches(photometricInterpretationSpec, this.photometricInterpretation)) return false;
+		if (!matches(planarConfigurationSpec, this.planarConfiguration)) return false;
+		if (!matches(pixelRepresentationSpec, this.pixelRepresentation)) return false;
+		if (!matches(pixelPresentationSpec, this.pixelPresentation)) return false;
+		if (!matches(modalitySpec, this.modality)) return false;
 		return true;
+	}
+	
+	public boolean matches(String spec, String value) {
+		boolean result = false;
+		value = (value==null) ? "" : value.trim();
+		if (spec.equals("")) result = value.equals("");
+		else if (spec.equals("*")) result = true;
+		else if (spec.startsWith("*")) {
+			spec = spec.substring(1);
+			if (spec.endsWith("*")) {
+				spec = spec.substring(0,spec.length()-1);
+				result = value.contains(spec);
+			}
+			else result = value.endsWith(spec);
+		}
+		else if (spec.endsWith("*")) {
+			spec = spec.substring(0,spec.length()-1);
+			result = value.startsWith(spec);
+		}
+		else result = value.equals(spec);
+		return result;
 	}
 	
     public void actionPerformed(ActionEvent event) {
@@ -123,11 +144,11 @@ public class IndexEntry implements ActionListener, Serializable {
 		JPanel left = new JPanel();
 		left.setBackground(Color.white);
 		left.setLayout(new RowLayout());
-		JButton export = new JButton("Export");
+		IndexButton export = new IndexButton("Export");
 		export.addActionListener(this);
 		left.add(export);
 		left.add(RowLayout.crlf());
-		JButton binary = new JButton("Binary");
+		IndexButton binary = new IndexButton("Binary");
 		binary.addActionListener(this);
 		left.add(binary);
 		left.add(RowLayout.crlf());

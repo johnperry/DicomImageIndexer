@@ -1,6 +1,16 @@
 package org.rsna.indexer;
 
-public class IndexEntryType implements Comparable<IndexEntryType> {
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.util.*;
+import javax.swing.*;
+import org.rsna.ctp.pipeline.Status;
+import org.rsna.ctp.stdstages.dicom.DicomStorageSCU;
+import org.rsna.ui.*;
+import org.rsna.util.*;
+
+public class IndexEntryType implements Comparable<IndexEntryType>, ActionListener {
 	
 	static String margin = "    ";
 
@@ -11,7 +21,6 @@ public class IndexEntryType implements Comparable<IndexEntryType> {
 	String modality;
 	String pixelPresentation;
 	String pixelRepresentation;
-	String key;
 	int hash = 0;
 
 	public IndexEntryType(IndexEntry e) {
@@ -22,8 +31,65 @@ public class IndexEntryType implements Comparable<IndexEntryType> {
 		this.modality = e.modality;
 		this.pixelPresentation = e.pixelPresentation;
 		this.pixelRepresentation = e.pixelRepresentation;
-		this.key = getKey();
-		this.hash = key.hashCode();
+		this.hash = getKey().hashCode();
+	}
+
+    public void actionPerformed(ActionEvent event) {
+		Object source = event.getSource();
+		if (source instanceof JButton) {
+			JButton jb = (JButton)source;
+			String jbText = jb.getText();
+			if (jbText.equals("List")) {
+				ResultsPane resultsPane = ResultsPane.getInstance();
+				IndexPane indexPane = IndexPane.getInstance();
+				Component c = indexPane.getParent();
+				if (c instanceof JTabbedPane) {
+					JTabbedPane jtp = (JTabbedPane)c;
+					jtp.setSelectedComponent(resultsPane);
+				}
+				resultsPane.showResults(indexPane.search(this));
+			}
+			else if (jbText.equals("Export")) {
+				IndexPane indexPane = IndexPane.getInstance();
+				(new Sender(indexPane.search(this))).start();
+			}
+		}
+	}
+	
+	class Sender extends Thread {
+		int count = 0;
+		int ok = 0;
+		int retry = 0;
+		int fail = 0;
+		DicomStorageSCU scu;
+		StatusPane sp;
+		LinkedList<IndexEntry> entries;
+		public Sender(LinkedList<IndexEntry> entries) {
+			super();
+			this.entries = entries;
+		}
+		public void run() {
+			StatusPane sp = StatusPane.getInstance();
+			Configuration config = Configuration.getInstance();
+			String scp = config.getProperty("scp", "dicom://DEST:SRC@127.0.0.1:104");
+			scu = new DicomStorageSCU(scp, 0, true, 0, 0, 0, 0);
+			for (IndexEntry entry : entries) {
+				send(entry.file);
+			}
+			sp.setText(ok + " of " + count + " files sent successfully (fail = "+fail+"; retry = "+retry+")");
+		}
+		private void send(File file) {
+			Status result = scu.send(file);
+			sp.setText(file.getAbsolutePath() + " > " + result.toString());
+			count++;
+			if (result.equals(Status.OK)) ok++;
+			else if (result.equals(Status.FAIL)) {
+				fail++;
+			}
+			else if (result.equals(Status.RETRY)) {
+				retry++;
+			}
+		}
 	}
 
 	public String getKey() {
@@ -33,10 +99,6 @@ public class IndexEntryType implements Comparable<IndexEntryType> {
 							+ pixelPresentation 
 								+ pixelRepresentation
 									+ modality);
-	}
-	
-	public String getIndexKey() {
-		return key;
 	}
 	
 	public int hashCode() {
@@ -68,8 +130,44 @@ public class IndexEntryType implements Comparable<IndexEntryType> {
 		return 0;
 	}
 	
-	public String toString() {
+	public JPanel toPanel(int n) {
+		//make the button panel
+		JPanel left = new JPanel();
+		left.setBackground(Color.white);
+		left.setLayout(new RowLayout());
+		IndexButton export = new IndexButton("Export");
+		export.addActionListener(this);
+		left.add(export);
+		left.add(RowLayout.crlf());
+		IndexButton binary = new IndexButton("List");
+		binary.addActionListener(this);
+		left.add(binary);
+		left.add(RowLayout.crlf());
+		
+		//make the text component
+		JPanel right = new JPanel();
+		right.setBackground(Color.white);
+		right.setLayout(new RowLayout());
+		JTextPane jtp = new JTextPane();
+		jtp.setFont(new Font("Monospaced",Font.PLAIN,12));
+		jtp.setText(toString(n));
+		right.add(jtp);
+		right.add(RowLayout.crlf());
+		
+		//put them together
+		JPanel both = new JPanel();
+		both.setBackground(Color.white);
+		both.setLayout(new RowLayout());
+		both.add(left);
+		both.add(right);
+		both.add(RowLayout.crlf());
+		
+		return both;
+	}
+
+	public String toString(int n) {
 		StringBuffer sb = new StringBuffer();
+		sb.append(margin + "Number of files:           " + n + "\n");
 		sb.append(margin + "TransferSyntax:            " + transferSyntax + "\n");
 		sb.append(margin + "TransferSyntaxName         " + transferSyntaxName + "\n");
 		sb.append(margin + "PixelPresentation:         " + pixelPresentation + "\n");

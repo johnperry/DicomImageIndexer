@@ -109,7 +109,7 @@ public class PropertiesPane extends JPanel implements ActionListener {
 
 	class CTextField extends JTextField {
 		public CTextField(String s) {
-			super(150);
+			super(80);
 			setText(s);
 			setFont( new Font( "Monospaced", Font.PLAIN, 12 ) );
 			setAlignmentX(0.0f);

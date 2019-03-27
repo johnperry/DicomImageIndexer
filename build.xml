@@ -2,6 +2,7 @@
 
 	<property name="build" value="${basedir}/build"/>
 	<property name="source" value="${basedir}/source"/>
+	<property name="files" value="${source}/files"/>
 	<property name="java" value="${source}/java"/>
 	<property name="products" value="${basedir}/products"/>
 	<property name="ctp" value="/Development/CTP"/>
@@ -61,7 +62,7 @@
 	</target>
 
 	<target name="installer" depends="jar">
-	
+		<mkdir dir="${build}/DicomImageIndexer"/>
 		<copy overwrite="true" todir="${build}/DicomImageIndexer">
 			<fileset dir="${ctp}/libraries">
 				<include name="CTP.jar"/>
@@ -71,10 +72,9 @@
 				<include name="util.jar"/>
 				<include name="jdbm.jar"/>
 			</fileset>
-			<fileset dir="${binarydump}/products"
-				includes="BinaryDump.jar"/>
-			<fileset dir="${products}"
-				includes="DicomImageIndexer.jar"/>
+			<fileset dir="${binarydump}/products" includes="BinaryDump.jar"/>
+			<fileset dir="${products}" includes="DicomImageIndexer.jar"/>
+			<fileset dir="${files}"/>
 		</copy>
 
 		<jar destfile="${products}/DicomImageIndexer-installer.jar">
@@ -86,10 +86,11 @@
 			</manifest>
 			<fileset dir="${build}"
 				includes="/org/rsna/installer/** DicomImageIndexer/**"/>
+				
 
 		</jar>
 	</target>
 
-	<target name="all" depends="clean, jar"/>
+	<target name="all" depends="clean, installer"/>
 
 </project>

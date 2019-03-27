@@ -20,6 +20,8 @@ public class SearchPane extends JPanel implements ActionListener {
 	CTextField transferSyntax;
 	CTextField photometricInterpretation;
 	CTextField planarConfiguration;
+	CTextField pixelRepresentation;
+	CTextField pixelPresentation;
 	CTextField modality;
 	CButton search;
 	
@@ -40,11 +42,13 @@ public class SearchPane extends JPanel implements ActionListener {
 		JScrollPane jsp = new JScrollPane();
 		SearchFormPanel sfp = new SearchFormPanel();
 		sfp.addRow( "Search");
-		fileName = sfp.addRow( "File Name:", "" );
-		transferSyntax = sfp.addRow( "Transfer Syntax:", "" );
-		photometricInterpretation = sfp.addRow( "Photometric Interpretation:", "" );
-		planarConfiguration = sfp.addRow( "Planar Configuration:", "" );
-		modality = sfp.addRow( "Modality:", "" );
+		fileName = sfp.addRow( "File Name:", "*" );
+		transferSyntax = sfp.addRow( "Transfer Syntax UID:", "*" );
+		photometricInterpretation = sfp.addRow( "Photometric Interpretation:", "*" );
+		planarConfiguration = sfp.addRow( "Planar Configuration:", "*" );
+		pixelRepresentation = sfp.addRow( "Pixel Representation:", "*" );
+		pixelPresentation = sfp.addRow( "Pixel Presentation:", "*" );
+		modality = sfp.addRow( "Modality:", "*" );
 		search = new CButton("Search");
 		sfp.addRow(search);
 		search.addActionListener(this);
@@ -67,6 +71,8 @@ public class SearchPane extends JPanel implements ActionListener {
 							transferSyntax.getText().trim(),
 							photometricInterpretation.getText().trim(),
 							planarConfiguration.getText().trim(),
+							pixelRepresentation.getText().trim(),
+							pixelPresentation.getText().trim(),
 							modality.getText().trim()
 				)
 			);
@@ -129,7 +135,7 @@ public class SearchPane extends JPanel implements ActionListener {
 
 	class CTextField extends JTextField {
 		public CTextField(String s) {
-			super(150);
+			super(80);
 			setText(s);
 			setFont( new Font( "Monospaced", Font.PLAIN, 12 ) );
 			setAlignmentX(0.0f);
