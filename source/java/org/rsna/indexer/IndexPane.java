@@ -214,11 +214,9 @@ public class IndexPane extends JPanel implements ActionListener {
 			if (result.equals(Status.OK)) ok++;
 			else if (result.equals(Status.FAIL)) {
 				fail++;
-				//cp.println(result.toString() + ": " + file);
 			}
 			else if (result.equals(Status.RETRY)) {
 				retry++;
-				//cp.println(result.toString() + ": " + file);
 			}
 		}
 	}
@@ -277,8 +275,6 @@ public class IndexPane extends JPanel implements ActionListener {
 			startStop.setText("Stop");
 			walk(dir);
 			listTypes();
-			//System.out.println(count + " files.\n");
-			//System.out.println("IndexEntryTypes table size = "+types.size()+"\n");
 			running = false;
 			startStop.setText("Rebuild Index");
 		}

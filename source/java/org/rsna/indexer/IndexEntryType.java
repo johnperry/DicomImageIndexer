@@ -69,7 +69,7 @@ public class IndexEntryType implements Comparable<IndexEntryType>, ActionListene
 			this.entries = entries;
 		}
 		public void run() {
-			StatusPane sp = StatusPane.getInstance();
+			sp = StatusPane.getInstance();
 			Configuration config = Configuration.getInstance();
 			String scp = config.getProperty("scp", "dicom://DEST:SRC@127.0.0.1:104");
 			scu = new DicomStorageSCU(scp, 0, true, 0, 0, 0, 0);

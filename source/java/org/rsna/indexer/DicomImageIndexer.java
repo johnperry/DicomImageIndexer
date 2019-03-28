@@ -29,8 +29,10 @@ public class DicomImageIndexer extends JFrame {
     public static void main(String args[]) {
 		Logger.getRootLogger().addAppender(
 				new ConsoleAppender(
-					new PatternLayout("%d{HH:mm:ss} %-5p [%c{1}] %m%n")));
+					new PatternLayout("%d{HH:mm:ss} %-5p [%c] %m%n")));
 		Logger.getRootLogger().setLevel(Level.INFO);
+		Logger.getLogger("org.dcm4che").setLevel(Level.WARN);
+		Logger.getLogger("org.dcm4cheri").setLevel(Level.WARN);
         new DicomImageIndexer();
     }
 
